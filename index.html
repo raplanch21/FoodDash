@@ -7,6 +7,41 @@
     <meta name="description" content="Takeout — a demo food delivery app." />
     <meta name="theme-color" content="#faf7f4" />
     <title>Takeout · Food delivery demo</title>
+    <script>
+      (function (apiKey) {
+        (function (p, e, n, d, o) {
+          var v, w, x, y, z;
+          o = p[d] = p[d] || {};
+          o._q = o._q || [];
+          v = [
+            "initialize",
+            "identify",
+            "updateOptions",
+            "pageLoad",
+            "track",
+            "trackAgent",
+          ];
+          for (w = 0, x = v.length; w < x; ++w)
+            (function (m) {
+              o[m] =
+                o[m] ||
+                function () {
+                  o._q[m === v[0] ? "unshift" : "push"](
+                    [m].concat([].slice.call(arguments, 0)),
+                  );
+                };
+            })(v[w]);
+          y = e.createElement(n);
+          y.async = !0;
+          y.src =
+            "https://cdn.pendo-calypso.pendo-dev.com/agent/static/" +
+            apiKey +
+            "/pendo.js";
+          z = e.getElementsByTagName(n)[0];
+          z.parentNode.insertBefore(y, z);
+        })(window, document, "script", "pendo");
+      })("bad129e8-321d-4795-9a74-cad2f1c2a5bc");
+    </script>
   </head>
   <body>
     <div id="root"></div>
