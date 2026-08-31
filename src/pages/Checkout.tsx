@@ -94,7 +94,12 @@ export function Checkout() {
   // an empty form.
   if (cart.isEmpty || !restaurant) return <Navigate to="/" replace />
 
-  const totals = computeTotals(cart.subtotal, restaurant, fulfillment, tipPercent)
+  const totals = computeTotals(
+    cart.subtotal,
+    restaurant,
+    fulfillment,
+    tipPercent,
+  )
 
   const update = (key: keyof Form, value: string) => {
     setForm((current) => ({ ...current, [key]: value }))
@@ -106,6 +111,16 @@ export function Checkout() {
     setErrors(nextErrors)
 
     if (Object.keys(nextErrors).length > 0) {
+      if (typeof pendo !== 'undefined') {
+        pendo.track('checkout_validation_failed', {
+          errorFields: Object.keys(nextErrors),
+          errorCount: Object.keys(nextErrors).length,
+          fulfillment,
+          restaurantId: restaurant.id,
+          itemCount: cart.itemCount,
+          subtotal: cart.subtotal,
+        })
+      }
       notify('Check the highlighted fields')
       return
     }
@@ -133,6 +148,23 @@ export function Checkout() {
 
     // A beat of latency so the button state reads as a real submission.
     window.setTimeout(() => {
+      if (typeof pendo !== 'undefined') {
+        pendo.track('order_placed', {
+          orderId: order.id,
+          restaurantId: order.restaurantId,
+          restaurantName: order.restaurantName,
+          fulfillment: order.fulfillment,
+          itemCount: order.lines.reduce((sum, l) => sum + l.qty, 0),
+          uniqueItemCount: order.lines.length,
+          subtotal: order.totals.subtotal,
+          deliveryFee: order.totals.deliveryFee,
+          serviceFee: order.totals.serviceFee,
+          tip: order.totals.tip,
+          total: order.totals.total,
+          tipPercent: Math.round(tipPercent * 100),
+          etaMinutes: order.etaMinutes,
+        })
+      }
       dispatch({ type: 'order/place', order })
       setPlacedOrderId(order.id)
     }, 550)
@@ -184,7 +216,11 @@ export function Checkout() {
 
           <section className="card">
             <div className="card__body stack">
-              <h2>{fulfillment === 'delivery' ? 'Delivery address' : 'Your details'}</h2>
+              <h2>
+                {fulfillment === 'delivery'
+                  ? 'Delivery address'
+                  : 'Your details'}
+              </h2>
 
               <div className="field-grid">
                 <div className="field field--span">
@@ -199,7 +235,9 @@ export function Checkout() {
                     aria-invalid={Boolean(errors.name)}
                     autoComplete="name"
                   />
-                  {errors.name && <span className="field__error">{errors.name}</span>}
+                  {errors.name && (
+                    <span className="field__error">{errors.name}</span>
+                  )}
                 </div>
 
                 {fulfillment === 'delivery' && (
@@ -212,7 +250,9 @@ export function Checkout() {
                         id="street"
                         className="input"
                         value={form.street}
-                        onChange={(event) => update('street', event.target.value)}
+                        onChange={(event) =>
+                          update('street', event.target.value)
+                        }
                         aria-invalid={Boolean(errors.street)}
                         autoComplete="address-line1"
                       />
@@ -247,7 +287,9 @@ export function Checkout() {
                         aria-invalid={Boolean(errors.city)}
                         autoComplete="address-level2"
                       />
-                      {errors.city && <span className="field__error">{errors.city}</span>}
+                      {errors.city && (
+                        <span className="field__error">{errors.city}</span>
+                      )}
                     </div>
 
                     <div className="field">
@@ -260,12 +302,17 @@ export function Checkout() {
                         inputMode="numeric"
                         value={form.zip}
                         onChange={(event) =>
-                          update('zip', event.target.value.replace(/\D/g, '').slice(0, 5))
+                          update(
+                            'zip',
+                            event.target.value.replace(/\D/g, '').slice(0, 5),
+                          )
                         }
                         aria-invalid={Boolean(errors.zip)}
                         autoComplete="postal-code"
                       />
-                      {errors.zip && <span className="field__error">{errors.zip}</span>}
+                      {errors.zip && (
+                        <span className="field__error">{errors.zip}</span>
+                      )}
                     </div>
 
                     <div className="field field--span">
@@ -276,7 +323,9 @@ export function Checkout() {
                         id="notes"
                         className="input"
                         value={form.notes}
-                        onChange={(event) => update('notes', event.target.value)}
+                        onChange={(event) =>
+                          update('notes', event.target.value)
+                        }
                         placeholder="Buzzer code, gate, where to leave it"
                       />
                     </div>
@@ -341,7 +390,9 @@ export function Checkout() {
                     }
                     aria-invalid={Boolean(errors.card)}
                   />
-                  {errors.card && <span className="field__error">{errors.card}</span>}
+                  {errors.card && (
+                    <span className="field__error">{errors.card}</span>
+                  )}
                 </div>
 
                 <div className="field">
@@ -375,11 +426,16 @@ export function Checkout() {
                     placeholder="123"
                     value={form.cvc}
                     onChange={(event) =>
-                      update('cvc', event.target.value.replace(/\D/g, '').slice(0, 4))
+                      update(
+                        'cvc',
+                        event.target.value.replace(/\D/g, '').slice(0, 4),
+                      )
                     }
                     aria-invalid={Boolean(errors.cvc)}
                   />
-                  {errors.cvc && <span className="field__error">{errors.cvc}</span>}
+                  {errors.cvc && (
+                    <span className="field__error">{errors.cvc}</span>
+                  )}
                 </div>
               </div>
             </div>
@@ -445,7 +501,9 @@ export function Checkout() {
               onClick={placeOrder}
               disabled={placing}
             >
-              {placing ? 'Placing order…' : `Place order · ${money(totals.total)}`}
+              {placing
+                ? 'Placing order…'
+                : `Place order · ${money(totals.total)}`}
             </button>
           </div>
         </aside>

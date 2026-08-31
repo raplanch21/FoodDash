@@ -28,7 +28,10 @@ export function RestaurantMenu() {
       .filter((item) => item.popular)
 
     return popular.length >= 2
-      ? [{ id: 'popular', name: 'Popular right now', items: popular }, ...restaurant.menu]
+      ? [
+          { id: 'popular', name: 'Popular right now', items: popular },
+          ...restaurant.menu,
+        ]
       : restaurant.menu
   }, [restaurant])
 
@@ -50,10 +53,25 @@ export function RestaurantMenu() {
   }
 
   const cartIsElsewhere =
-    !cart.isEmpty && cart.restaurantId !== null && cart.restaurantId !== restaurant.id
+    !cart.isEmpty &&
+    cart.restaurantId !== null &&
+    cart.restaurantId !== restaurant.id
 
   const addItem = (item: MenuItem) => {
     dispatch({ type: 'cart/add', restaurantId: restaurant.id, item })
+    if (typeof pendo !== 'undefined') {
+      pendo.track('item_added_to_cart', {
+        restaurantId: restaurant.id,
+        restaurantName: restaurant.name,
+        itemId: item.id,
+        itemName: item.name,
+        itemPrice: item.price,
+        isPopular: item.popular ?? false,
+        isVegetarian: item.vegetarian ?? false,
+        isSpicy: item.spicy ?? false,
+        cuisine: restaurant.cuisine,
+      })
+    }
     notify(`${item.name} added`)
   }
 
@@ -149,6 +167,15 @@ export function RestaurantMenu() {
           description={`Your cart has items from another restaurant. Adding ${conflictItem.name} will empty it.`}
           confirmLabel="Start new cart"
           onConfirm={() => {
+            if (typeof pendo !== 'undefined') {
+              pendo.track('cart_replaced', {
+                newRestaurantId: restaurant.id,
+                newRestaurantName: restaurant.name,
+                previousRestaurantId: cart.restaurantId,
+                newItemName: conflictItem.name,
+                newItemPrice: conflictItem.price,
+              })
+            }
             addItem(conflictItem)
             setConflictItem(null)
           }}
