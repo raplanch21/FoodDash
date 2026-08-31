@@ -1,3 +1,4 @@
-declare const pendo:
-  | { track(name: string, properties?: Record<string, unknown>): void }
-  | undefined
+declare const pendo: {
+  initialize(options: { visitor: { id: string } }): void
+  track(name: string, properties?: Record<string, unknown>): void
+}
