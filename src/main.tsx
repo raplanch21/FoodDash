@@ -8,7 +8,7 @@ import { UIProvider } from './lib/UIProvider.tsx'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <BrowserRouter>
+    <BrowserRouter basename={import.meta.env.BASE_URL}>
       <StoreProvider>
         <UIProvider>
           <App />
